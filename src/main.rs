@@ -1,6 +1,6 @@
 use image::{
-    imageops::{overlay, rotate90},
-    open as open_image, Rgba, RgbaImage,
+    imageops::{crop, overlay, rotate90},
+    open as open_image, GenericImage, GenericImageView, Rgba, RgbaImage, SubImage,
 };
 use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
@@ -75,7 +75,7 @@ fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
 fn transform(mut img: Image<Rgba<u8>>) -> Result<Image<Rgba<u8>>, String> {
     img = draw_text(
         &mut img,
-        Rgba([1, 0, 0, 255]),
+        Rgba([0, 0, 0, 255]),
         20,
         0,
         Scale { x: 20.0, y: 400.0 },
@@ -83,8 +83,11 @@ fn transform(mut img: Image<Rgba<u8>>) -> Result<Image<Rgba<u8>>, String> {
         "Hummus aus Moosach",
     );
     let bbox = find_bbox(&img);
+    let width = bbox.1 - bbox.0;
+    let height = bbox.3 - bbox.2;
+    let new_img = crop(&mut img.clone(), bbox.0, bbox.2, width, height).to_image();
     let img_rotated = rotate90(&img);
 
     overlay(&mut img, &img_rotated, 0, 0);
-    return Ok(img);
+    return Ok(new_img);
 }
