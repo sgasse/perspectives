@@ -51,7 +51,7 @@ fn transform(mut img: Image<Rgb<u8>>) -> Result<Image<Rgb<u8>>, String> {
         Rgb([50, 255, 50]),
         20,
         20,
-        Scale { x: 20.0, y: 20.0 },
+        Scale { x: 5.0, y: 80.0 },
         &load_font(),
         "This is a very long text let's write it",
     );
