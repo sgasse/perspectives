@@ -1,6 +1,8 @@
 mod utils;
 
+use js_sys::Uint8ClampedArray;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
 use image::{
     imageops::{crop, overlay, rotate90},
@@ -8,6 +10,9 @@ use image::{
 };
 use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
+use wasm_bindgen::Clamped;
+use web_sys::window;
+use web_sys::ImageData;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -118,4 +123,55 @@ pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
         (length - width) / 2,
     );
     bottom
+}
+
+#[wasm_bindgen]
+pub fn create_image() {
+    let window = window().unwrap();
+    let img = get_scaled_cropped_text("WASM for fun");
+    let canvas = get_canvas("textImage").unwrap();
+
+    let (sw, sh) = img.dimensions();
+
+    let img_arr: &[u8] = &img.into_raw();
+
+    let img_data = ImageData::new_with_u8_clamped_array_and_sh(Clamped(img_arr), sw, sh).unwrap();
+
+    let ctx = get_2d_context(&canvas).unwrap();
+    ctx.put_image_data(&img_data, 0.0, 0.0).unwrap();
+}
+
+fn get_canvas(canvas_name: &str) -> Result<web_sys::HtmlCanvasElement, &'static str> {
+    let document = match web_sys::window() {
+        Some(document) => match document.document() {
+            Some(document) => document,
+            None => return Err("Could not get document"),
+        },
+        None => return Err("Could not get document"),
+    };
+
+    let canvas = match document.get_element_by_id(canvas_name) {
+        Some(canvas) => canvas,
+        None => return Err("Could not get canvas"),
+    };
+
+    canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| "Could not cast canvas")
+}
+
+fn get_2d_context(
+    canvas: &web_sys::HtmlCanvasElement,
+) -> Result<web_sys::CanvasRenderingContext2d, &'static str> {
+    match canvas.get_context("2d") {
+        Ok(ctx) => match ctx {
+            Some(ctx) => {
+                return ctx
+                    .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                    .map_err(|_| "Could not cast context")
+            }
+            None => return Err("Could not get context"),
+        },
+        Err(_) => return Err("Could not get context"),
+    }
 }

@@ -12,7 +12,7 @@ fn main() {
 }
 
 fn process_main() -> Result<(), String> {
-    let img = get_scaled_cropped_text("Hummus aus Moosach");
+    let img = get_scaled_cropped_text("Rust for fun");
     let img = overlay_with_rotated(img);
     write_image(img, "test_out.png")?;
     Ok(())

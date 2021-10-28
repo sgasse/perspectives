@@ -14,7 +14,17 @@
     </div>
 
     <script src='./pkg/perspectives.js'></script>
+    <script>
+        const { create_image } = wasm_bindgen;
 
+        async function run() {
+            await wasm_bindgen('./pkg/perspectives_bg.wasm');
+
+            create_image();
+        }
+
+        run();
+    </script>
 </body>
 
 </html>
