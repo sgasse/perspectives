@@ -28,6 +28,7 @@ features = [
   'Document',
   'Element',
   'HtmlCanvasElement',
+  'HtmlInputElement',
   'HtmlElement',
   'ImageData',
   'MessageEvent',

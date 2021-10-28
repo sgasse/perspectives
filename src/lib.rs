@@ -1,7 +1,7 @@
 mod utils;
 
-use js_sys::Uint8ClampedArray;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
 use wasm_bindgen::JsCast;
 
 use image::{
@@ -10,15 +10,10 @@ use image::{
 };
 use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
-use wasm_bindgen::Clamped;
+use web_sys::console;
 use web_sys::window;
+use web_sys::HtmlInputElement;
 use web_sys::ImageData;
-
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 extern "C" {
@@ -125,11 +120,10 @@ pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
     bottom
 }
 
-#[wasm_bindgen]
-pub fn create_image() {
+pub fn set_perspective_image(text: &str) {
     set_canvas_size(400, 400);
     let window = window().unwrap();
-    let img = get_scaled_cropped_text("WASM for fun");
+    let img = get_scaled_cropped_text(text);
     let img = overlay_with_rotated(img);
     let canvas = get_canvas("textImage").unwrap();
 
@@ -183,4 +177,41 @@ pub fn set_canvas_size(width: u32, height: u32) {
 
     canvas.set_width(width);
     canvas.set_height(height);
+}
+
+#[wasm_bindgen]
+pub fn wasm_main() {
+    setup_input_onchange_callback();
+}
+
+fn setup_input_onchange_callback() {
+    let document = web_sys::window().unwrap().document().unwrap();
+
+    let callback = Closure::wrap(Box::new(move || {
+        console::log_1(&"onchange callback triggered".into());
+        let document = web_sys::window().unwrap().document().unwrap();
+
+        let input_field = document
+            .get_element_by_id("inputText")
+            .expect("#inputText should exist");
+        let input_field = input_field
+            .dyn_ref::<HtmlInputElement>()
+            .expect("#inputText should be a HtmlInputElement");
+
+        let text = input_field.value();
+        if text != "" {
+            set_perspective_image(&*text);
+        }
+    }) as Box<dyn FnMut()>);
+
+    // Attach the closure as `onchange` callback to the input field.
+    document
+        .get_element_by_id("inputNumber")
+        .expect("#inputNumber should exist")
+        .dyn_ref::<HtmlInputElement>()
+        .expect("#inputNumber should be a HtmlInputElement")
+        .set_oninput(Some(callback.as_ref().unchecked_ref()));
+
+    // Leaks memory.
+    callback.forget();
 }
