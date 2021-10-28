@@ -1,5 +1,6 @@
 mod utils;
 
+use utils::set_panic_hook;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use wasm_bindgen::JsCast;
@@ -181,6 +182,8 @@ pub fn set_canvas_size(width: u32, height: u32) {
 
 #[wasm_bindgen]
 pub fn wasm_main() {
+    set_panic_hook();
+
     setup_input_onchange_callback();
 }
 
@@ -206,10 +209,10 @@ fn setup_input_onchange_callback() {
 
     // Attach the closure as `onchange` callback to the input field.
     document
-        .get_element_by_id("inputNumber")
-        .expect("#inputNumber should exist")
+        .get_element_by_id("inputText")
+        .expect("#inputText should exist")
         .dyn_ref::<HtmlInputElement>()
-        .expect("#inputNumber should be a HtmlInputElement")
+        .expect("#inputText should be a HtmlInputElement")
         .set_oninput(Some(callback.as_ref().unchecked_ref()));
 
     // Leaks memory.
