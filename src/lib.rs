@@ -127,8 +127,10 @@ pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
 
 #[wasm_bindgen]
 pub fn create_image() {
+    set_canvas_size(400, 400);
     let window = window().unwrap();
     let img = get_scaled_cropped_text("WASM for fun");
+    let img = overlay_with_rotated(img);
     let canvas = get_canvas("textImage").unwrap();
 
     let (sw, sh) = img.dimensions();
@@ -174,4 +176,11 @@ fn get_2d_context(
         },
         Err(_) => return Err("Could not get context"),
     }
+}
+
+pub fn set_canvas_size(width: u32, height: u32) {
+    let canvas = get_canvas("textImage").unwrap();
+
+    canvas.set_width(width);
+    canvas.set_height(height);
 }
