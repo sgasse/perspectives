@@ -1,9 +1,7 @@
 mod utils;
 
 use utils::set_panic_hook;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::Clamped;
-use wasm_bindgen::JsCast;
+use wasm_bindgen::{prelude::*, Clamped, JsCast};
 
 use image::{
     imageops::{crop, overlay, rotate90},
@@ -11,23 +9,16 @@ use image::{
 };
 use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
-use web_sys::console;
-use web_sys::window;
-use web_sys::HtmlInputElement;
-use web_sys::ImageData;
+use web_sys::{console, HtmlInputElement, ImageData};
 
 #[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, perspectives!");
+pub fn wasm_main() {
+    set_panic_hook();
+    setup_input_onchange_callback();
 }
 
 #[allow(dead_code)]
-fn read_and_decode(img_file: &str) -> Result<RgbaImage, String> {
+pub fn read_and_decode(img_file: &str) -> Result<RgbaImage, String> {
     match open_image(img_file) {
         Ok(img) => Ok(img.into_rgba8()),
         Err(_) => Err(format!("Could not read {}", img_file)),
@@ -44,39 +35,6 @@ pub fn write_image(img: Image<Rgba<u8>>, filename: &str) -> Result<(), String> {
             return Err(format!("Could not save to {}", filename));
         }
     }
-}
-
-fn load_font() -> Font<'static> {
-    let font_data: &[u8] = include_bytes!("../resources/DejaVuSans.ttf");
-    let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
-    return font;
-}
-
-fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
-    let (width, height) = img.dimensions();
-    let mut xmin = width;
-    let mut xmax = 0;
-    let mut ymin = height;
-    let mut ymax = 0;
-
-    for (x, y, pixel) in img.enumerate_pixels() {
-        if *pixel != Rgba([0, 0, 0, 0]) {
-            if x < xmin {
-                xmin = x;
-            }
-            if y < ymin {
-                ymin = y
-            }
-            if x > xmax {
-                xmax = x;
-            }
-            if y > ymax {
-                ymax = y;
-            }
-        }
-    }
-
-    (xmin, xmax, ymin, ymax)
 }
 
 pub fn get_scaled_cropped_text(text: &str) -> Image<Rgba<u8>> {
@@ -121,9 +79,41 @@ pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
     bottom
 }
 
-pub fn set_perspective_image(text: &str) {
+fn load_font() -> Font<'static> {
+    let font_data: &[u8] = include_bytes!("../resources/DejaVuSans.ttf");
+    let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
+    return font;
+}
+
+fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
+    let (width, height) = img.dimensions();
+    let mut xmin = width;
+    let mut xmax = 0;
+    let mut ymin = height;
+    let mut ymax = 0;
+
+    for (x, y, pixel) in img.enumerate_pixels() {
+        if *pixel != Rgba([0, 0, 0, 0]) {
+            if x < xmin {
+                xmin = x;
+            }
+            if y < ymin {
+                ymin = y
+            }
+            if x > xmax {
+                xmax = x;
+            }
+            if y > ymax {
+                ymax = y;
+            }
+        }
+    }
+
+    (xmin, xmax, ymin, ymax)
+}
+
+fn set_perspective_image(text: &str) {
     set_canvas_size(400, 400);
-    let window = window().unwrap();
     let img = get_scaled_cropped_text(text);
     let img = overlay_with_rotated(img);
     let canvas = get_canvas("textImage").unwrap();
@@ -136,6 +126,38 @@ pub fn set_perspective_image(text: &str) {
 
     let ctx = get_2d_context(&canvas).unwrap();
     ctx.put_image_data(&img_data, 0.0, 0.0).unwrap();
+}
+
+fn setup_input_onchange_callback() {
+    let document = web_sys::window().unwrap().document().unwrap();
+
+    let callback = Closure::wrap(Box::new(move || {
+        console::log_1(&"onchange callback triggered".into());
+        let document = web_sys::window().unwrap().document().unwrap();
+
+        let input_field = document
+            .get_element_by_id("inputText")
+            .expect("#inputText should exist");
+        let input_field = input_field
+            .dyn_ref::<HtmlInputElement>()
+            .expect("#inputText should be a HtmlInputElement");
+
+        let text = input_field.value();
+        if text != "" {
+            set_perspective_image(&*text);
+        }
+    }) as Box<dyn FnMut()>);
+
+    // Attach the closure as `onchange` callback to the input field.
+    document
+        .get_element_by_id("inputText")
+        .expect("#inputText should exist")
+        .dyn_ref::<HtmlInputElement>()
+        .expect("#inputText should be a HtmlInputElement")
+        .set_oninput(Some(callback.as_ref().unchecked_ref()));
+
+    // Leaks memory.
+    callback.forget();
 }
 
 fn get_canvas(canvas_name: &str) -> Result<web_sys::HtmlCanvasElement, &'static str> {
@@ -178,43 +200,4 @@ pub fn set_canvas_size(width: u32, height: u32) {
 
     canvas.set_width(width);
     canvas.set_height(height);
-}
-
-#[wasm_bindgen]
-pub fn wasm_main() {
-    set_panic_hook();
-
-    setup_input_onchange_callback();
-}
-
-fn setup_input_onchange_callback() {
-    let document = web_sys::window().unwrap().document().unwrap();
-
-    let callback = Closure::wrap(Box::new(move || {
-        console::log_1(&"onchange callback triggered".into());
-        let document = web_sys::window().unwrap().document().unwrap();
-
-        let input_field = document
-            .get_element_by_id("inputText")
-            .expect("#inputText should exist");
-        let input_field = input_field
-            .dyn_ref::<HtmlInputElement>()
-            .expect("#inputText should be a HtmlInputElement");
-
-        let text = input_field.value();
-        if text != "" {
-            set_perspective_image(&*text);
-        }
-    }) as Box<dyn FnMut()>);
-
-    // Attach the closure as `onchange` callback to the input field.
-    document
-        .get_element_by_id("inputText")
-        .expect("#inputText should exist")
-        .dyn_ref::<HtmlInputElement>()
-        .expect("#inputText should be a HtmlInputElement")
-        .set_oninput(Some(callback.as_ref().unchecked_ref()));
-
-    // Leaks memory.
-    callback.forget();
 }
