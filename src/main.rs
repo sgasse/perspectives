@@ -1,8 +1,7 @@
 extern crate perspectives;
 
-use perspectives::get_scaled_cropped_text;
-use perspectives::overlay_with_rotated;
-use perspectives::write_image;
+use perspectives::draw::{get_scaled_cropped_text, overlay_with_rotated};
+use perspectives::fs_io::write_image;
 
 fn main() {
     match process_main() {
