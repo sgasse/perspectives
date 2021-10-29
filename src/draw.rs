@@ -9,24 +9,27 @@ use rusttype::{Font, Scale};
 use web_sys::ImageData;
 
 pub fn calc_perspective_image(text: &str) -> ImageData {
-    let img = get_scaled_cropped_text(text);
+    let img = get_scaled_cropped_text(text, 15.0, 400.0);
     let img = overlay_with_rotated(img);
 
-    let (sw, sh) = img.dimensions();
+    let (sw, _sh) = img.dimensions();
 
     let img_arr: &[u8] = &img.into_raw();
 
-    ImageData::new_with_u8_clamped_array_and_sh(Clamped(img_arr), sw, sh).unwrap()
+    ImageData::new_with_u8_clamped_array(Clamped(img_arr), sw).unwrap()
 }
 
-pub fn get_scaled_cropped_text(text: &str) -> Image<Rgba<u8>> {
+pub fn get_scaled_cropped_text(text: &str, x_scale: f32, y_scale: f32) -> Image<Rgba<u8>> {
     let mut img = RgbaImage::from_pixel(400, 400, Rgba([0, 0, 0, 0]));
     img = draw_text(
         &mut img,
         Rgba([0, 0, 0, 255]),
-        20,
         0,
-        Scale { x: 20.0, y: 400.0 },
+        0,
+        Scale {
+            x: x_scale,
+            y: y_scale,
+        },
         &load_font(),
         text,
     );
@@ -38,7 +41,7 @@ pub fn get_scaled_cropped_text(text: &str) -> Image<Rgba<u8>> {
 
 pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
     let (width, height) = img.dimensions();
-    let length = u32::max(width, height) + 10;
+    let length = 400;
 
     let rotated = rotate90(&img.clone());
 
@@ -89,7 +92,31 @@ fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
 }
 
 fn load_font() -> Font<'static> {
-    let font_data: &[u8] = include_bytes!("../resources/DejaVuSans.ttf");
+    let font_data: &[u8] = include_bytes!("../resources/DejaVuSansMono.ttf");
     let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
     return font;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_scaled_cropped_text;
+
+    #[test]
+    fn check_letters_in_bound() {
+        let mut max_height = 0;
+
+        for byte_num in 33..=126 {
+            let byte_arr = [byte_num];
+            let test_letter = std::str::from_utf8(&byte_arr).unwrap();
+            let img = get_scaled_cropped_text(&format!("{}", test_letter), 15.0, 400.0);
+            let (_width, height) = img.dimensions();
+
+            if height > max_height {
+                max_height = height;
+            }
+        }
+
+        println!("Maximum height: {}px", max_height);
+        assert!(max_height < 400);
+    }
 }

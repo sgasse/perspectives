@@ -1,14 +1,13 @@
 use super::draw::calc_perspective_image;
 
 use wasm_bindgen::{prelude::*, JsCast};
+use web_sys::HtmlInputElement;
 use web_sys::ImageData;
-use web_sys::{console, HtmlInputElement};
 
 pub fn setup_input_onchange_callback() {
     let document = web_sys::window().unwrap().document().unwrap();
 
     let callback = Closure::wrap(Box::new(move || {
-        console::log_1(&"onchange callback triggered".into());
         let document = web_sys::window().unwrap().document().unwrap();
 
         let input_field = document
@@ -19,9 +18,11 @@ pub fn setup_input_onchange_callback() {
             .expect("#inputText should be a HtmlInputElement");
 
         let text = input_field.value();
-        if text != "" {
+        if text != "" && text != " " {
             let img_data = calc_perspective_image(&*text);
             set_img_data(img_data);
+        } else {
+            clear_canvas();
         }
     }) as Box<dyn FnMut()>);
 
@@ -48,6 +49,12 @@ fn set_img_data(img_data: ImageData) {
     let canvas = get_canvas("textImage").unwrap();
     let ctx = get_2d_context(&canvas).unwrap();
     ctx.put_image_data(&img_data, 0.0, 0.0).unwrap();
+}
+
+fn clear_canvas() {
+    let canvas = get_canvas("textImage").unwrap();
+    let ctx = get_2d_context(&canvas).unwrap();
+    ctx.clear_rect(0.0, 0.0, 400.0, 400.0);
 }
 
 fn get_canvas(canvas_name: &str) -> Result<web_sys::HtmlCanvasElement, &'static str> {

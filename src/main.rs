@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn process_main() -> Result<(), String> {
-    let img = get_scaled_cropped_text("Rust for fun");
+    let img = get_scaled_cropped_text("Rust for fun", 15.0, 400.0);
     let img = overlay_with_rotated(img);
     write_image(img, "test_out.png")?;
     Ok(())
