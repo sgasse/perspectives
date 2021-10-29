@@ -21,6 +21,7 @@ console_error_panic_hook = { version = "^0.1.7", optional = true }
 js-sys = "^0.3.55"
 warp = "^0.3.1"
 tokio = { version = "1.13.0", features = ["full"] }
+structopt = "^0.3"
 
 [dependencies.web-sys]
 version = "^0.3.55"
