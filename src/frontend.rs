@@ -13,6 +13,13 @@ use web_sys::ImageData;
 pub fn setup_input_onchange_callback(timeout_millis: i32) {
     let document = web_sys::window().unwrap().document().unwrap();
 
+    // If the user types a whole word or sentence, we do not want to update the
+    // whole text for every individual letter entered. Therefore, we do not
+    // trigger the recalculation of the image directly. Instead, we set a
+    // timeout for the update closure and replace it with a newer one if the
+    // text field was updated while we were waiting.
+    // To be able to clear the right callback and not have it destroyed without
+    // leaking memory, we store both the ID and the handle.
     let mut last_inner_callback_id: Option<i32> = None;
     let mut update_callback_handle: Option<Closure<dyn FnMut()>> = None;
 
