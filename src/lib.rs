@@ -15,5 +15,5 @@ pub fn wasm_main() {
     set_panic_hook();
     let canvas_size = get_min_window_dim() as u32;
     set_canvas_size(canvas_size, canvas_size);
-    setup_input_onchange_callback();
+    setup_input_onchange_callback(500);
 }
