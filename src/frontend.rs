@@ -19,7 +19,7 @@ pub fn setup_input_onchange_callback() {
 
         let text = input_field.value();
         if text != "" && text != " " {
-            let img_data = calc_perspective_image(&*text);
+            let img_data = calc_perspective_image(&*text, get_min_window_dim());
             set_img_data(img_data);
         } else {
             clear_canvas();
@@ -36,6 +36,20 @@ pub fn setup_input_onchange_callback() {
 
     // Leaks memory.
     callback.forget();
+}
+
+pub fn get_min_window_dim() -> f32 {
+    let window = web_sys::window().unwrap();
+
+    let inner_width: f32 = window.inner_width().unwrap().as_f64().unwrap() as f32;
+    let inner_height: f32 = window.inner_height().unwrap().as_f64().unwrap() as f32;
+
+    let mut min_res = inner_width;
+    if inner_height < min_res {
+        min_res = inner_height;
+    }
+
+    min_res
 }
 
 pub fn set_canvas_size(width: u32, height: u32) {

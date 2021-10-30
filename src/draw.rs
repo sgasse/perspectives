@@ -8,9 +8,9 @@ use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
 use web_sys::ImageData;
 
-pub fn calc_perspective_image(text: &str) -> ImageData {
-    let img = get_scaled_cropped_text(text, 15.0, 400.0);
-    let img = overlay_with_rotated(img);
+pub fn calc_perspective_image(text: &str, canvas_size: f32) -> ImageData {
+    let img = get_scaled_cropped_text(text, canvas_size / 26.0, canvas_size, canvas_size as u32);
+    let img = overlay_with_rotated(img, canvas_size as u32);
 
     let (sw, _sh) = img.dimensions();
 
@@ -19,8 +19,13 @@ pub fn calc_perspective_image(text: &str) -> ImageData {
     ImageData::new_with_u8_clamped_array(Clamped(img_arr), sw).unwrap()
 }
 
-pub fn get_scaled_cropped_text(text: &str, x_scale: f32, y_scale: f32) -> Image<Rgba<u8>> {
-    let mut img = RgbaImage::from_pixel(400, 400, Rgba([0, 0, 0, 0]));
+pub fn get_scaled_cropped_text(
+    text: &str,
+    x_scale: f32,
+    y_scale: f32,
+    background_size: u32,
+) -> Image<Rgba<u8>> {
+    let mut img = RgbaImage::from_pixel(background_size, background_size, Rgba([0, 0, 0, 0]));
     img = draw_text(
         &mut img,
         Rgba([0, 0, 0, 255]),
@@ -39,9 +44,8 @@ pub fn get_scaled_cropped_text(text: &str, x_scale: f32, y_scale: f32) -> Image<
     crop(&mut img, bbox.0, bbox.2, width, height).to_image()
 }
 
-pub fn overlay_with_rotated(img: Image<Rgba<u8>>) -> Image<Rgba<u8>> {
+pub fn overlay_with_rotated(img: Image<Rgba<u8>>, length: u32) -> Image<Rgba<u8>> {
     let (width, height) = img.dimensions();
-    let length = 400;
 
     let rotated = rotate90(&img.clone());
 
@@ -108,7 +112,7 @@ mod tests {
         for byte_num in 33..=126 {
             let byte_arr = [byte_num];
             let test_letter = std::str::from_utf8(&byte_arr).unwrap();
-            let img = get_scaled_cropped_text(&format!("{}", test_letter), 15.0, 400.0);
+            let img = get_scaled_cropped_text(&format!("{}", test_letter), 15.0, 400.0, 400);
             let (_width, height) = img.dimensions();
 
             if height > max_height {

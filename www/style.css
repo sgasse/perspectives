@@ -17,3 +17,24 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+#canvasWrapper{
+    width: 100vmin;
+    height: 100vmin;
+}
+
+h1 {
+    text-align: center;
+    font-size: 8vmin;
+    display: flex;
+}
+
+input {
+    font-size: 5vmin;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin: 4px 4px;
+    padding: 12px, 20px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
