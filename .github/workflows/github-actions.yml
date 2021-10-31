@@ -1,0 +1,14 @@
+name: CI Workflow
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+      - name: Build WASM code
+        run: ./build.sh
