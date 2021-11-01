@@ -2,8 +2,7 @@
 
 Create a warped text interactively in the browser. Watch your screen at a very flat angle to read the text.
 
-Powered by [Rust][rust], [wasm-bindgen][wasm-bindgen] and the creates [`image`][image] and [`imageproc`][imageproc]. The project can serve itself via [`warp`][warp]. However, this is pretty wasteful, it generates a 7MB binary just to serve some static files.
-
+Powered by [Rust][rust], [wasm-bindgen][wasm-bindgen] and the creates [`image`][image] and [`imageproc`][imageproc].
 All interaction with the DOM is done with [wasm-bindgen][wasm-bindgen] and specifically `web-sys`.
 The generation of the warped image is triggered automatically when the input box changes. We delay
 the calculation a little with a _debounce pattern_ to avoid overloading the end device.
@@ -14,4 +13,3 @@ the calculation a little with a _debounce pattern_ to avoid overloading the end 
 [wasm-bindgen]: https://github.com/rustwasm/wasm-bindgen
 [image]: https://github.com/image-rs/image
 [imageproc]: https://docs.rs/imageproc/0.22.0/imageproc/
-[warp]: https://docs.rs/warp/0.3.1/warp/
