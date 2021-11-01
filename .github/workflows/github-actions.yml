@@ -12,10 +12,12 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build WASM code
         run: ./build.sh
+      - name: Compress release files
+        run: tar -czf perspectives_${{ github.ref }}.tar.gz www LICENSE-APACHE
+        if: startsWith(github.ref, 'refs/tags/')
       - name: Publish a release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            www/*
-            LICENSE-APACHE
+            perspectives_${{ github.ref }}.tar.gz
