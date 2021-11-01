@@ -6,20 +6,22 @@ jobs:
     container:
       image: rust:latest
     steps:
-      - name: Set release file name
-        run: echo "::set-output name=RELEASE_FILE::perspectives_${GITHUB_REF#refs/tags/}.tar.gz"
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build WASM code
         run: ./build.sh
+      - name: Set release file name
+        run: echo "RELEASE_FILE=perspectives_${GITHUB_REF#refs/tags/}.tar.gz" >> $GITHUB_ENV
       - name: Compress release files
-        run: tar -czf $RELEASE_FILE www LICENSE-APACHE
+        run: tar -czf ${RELEASE_FILE} www LICENSE-APACHE
         if: startsWith(github.ref, 'refs/tags/')
+      - name: Debug content
+        run: ls -la
       - name: Publish a release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            $RELEASE_FILE
+            *.tar.gz
