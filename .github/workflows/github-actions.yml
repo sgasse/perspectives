@@ -8,20 +8,48 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+
+      - name: Set variables
+        run: |
+          echo "TIMESTAMP=$(date +'%Y-%m-%d_%H:%M:%S')" >> $GITHUB_ENV
+          echo "RELEASE_FILE=perspectives_${GITHUB_REF#refs/tags/}.tar.gz" >> $GITHUB_ENV
+
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
       - name: Build WASM code
         run: ./build.sh
-      - name: Set release file name
-        run: echo "RELEASE_FILE=perspectives_${GITHUB_REF#refs/tags/}.tar.gz" >> $GITHUB_ENV
+      - name: List build content
+        run: ls -la
+
       - name: Compress release files
         run: tar -czf ${RELEASE_FILE} www LICENSE-APACHE
         if: startsWith(github.ref, 'refs/tags/')
-      - name: List build content
-        run: ls -la
       - name: Publish a release
-        uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@69a9b03fd9694e185b5d1450f1c534fb50ed4ab8
         with:
           files: |
             *.tar.gz
+
+      - name: Setup SSH key
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.GH_DEPLOY_SSH_KEY }}"
+      - name: Deploy new files via sftp
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run : |
+          sftp -o "StrictHostKeyChecking=no" gh_deploy@simongasse.de <<END
+          cd gh_deploy/perspectives
+          ls
+          rename latest old_${TIMESTAMP}
+          mkdir latest
+          cd latest
+          put -r www
+          END
