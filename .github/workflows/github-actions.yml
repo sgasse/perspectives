@@ -1,55 +1,36 @@
-name: CI Workflow
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      image: rust:latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
+name: Build and deploy to GH pages
 
-      - name: Set variables
-        run: |
-          echo "TIMESTAMP=$(date +'%Y-%m-%d_%H:%M:%S')" >> $GITHUB_ENV
-          echo "RELEASE_FILE=perspectives_${GITHUB_REF#refs/tags/}.tar.gz" >> $GITHUB_ENV
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLORS: always
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
       - name: Build WASM code
         run: ./build.sh
+
       - name: List build content
-        run: ls -la
+        run: tree
 
-      - name: Compress release files
-        run: tar -czf ${RELEASE_FILE} www LICENSE-APACHE
-        if: startsWith(github.ref, 'refs/tags/')
-      - name: Publish a release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@69a9b03fd9694e185b5d1450f1c534fb50ed4ab8
+      - name: Deploy to GH pages
+        if: success() && github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          files: |
-            *.tar.gz
-
-      - name: Setup SSH key
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.GH_DEPLOY_SSH_KEY }}"
-      - name: Deploy new files via sftp
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: bash
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-        run : |
-          sftp -o "StrictHostKeyChecking=no" gh_deploy@simongasse.de <<END
-          cd gh_deploy/perspectives
-          ls
-          rename latest old_${TIMESTAMP}
-          mkdir latest
-          cd latest
-          put -r www
-          END
+          folder: www
