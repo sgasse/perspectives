@@ -1,9 +1,9 @@
 {
   "name": "perspectives",
   "collaborators": [
-    "Simon Gasse <sgasse@users.noreply.github.com>"
+    "Simon B. Gasse <sgasse@users.noreply.github.com>"
   ],
-  "version": "0.2.5",
+  "version": "0.2.6",
   "files": [
     "perspectives_bg.wasm",
     "perspectives.js",
