@@ -24,9 +24,9 @@ pub fn get_scaled_cropped_text(
     y_scale: f32,
     background_size: u32,
 ) -> Image<Rgba<u8>> {
-    let mut img = RgbaImage::from_pixel(background_size, background_size, Rgba([0, 0, 0, 0]));
-    img = draw_text(
-        &mut img,
+    let img = RgbaImage::from_pixel(background_size, background_size, Rgba([0, 0, 0, 0]));
+    let mut img = draw_text(
+        &img,
         Rgba([0, 0, 0, 255]),
         0,
         0,
@@ -46,24 +46,17 @@ pub fn get_scaled_cropped_text(
 pub fn overlay_with_rotated(img: Image<Rgba<u8>>, length: u32) -> Image<Rgba<u8>> {
     let (width, height) = img.dimensions();
 
-    let rotated = rotate90(&img.clone());
+    let rotated = rotate90(&img);
 
     let mut bottom = RgbaImage::from_pixel(length, length, Rgba([255, 255, 255, 255]));
 
-    overlay(
-        &mut bottom,
-        &img,
-        (length - width) / 2,
-        (length - height) / 2,
-    );
+    let x = ((length - width) / 2) as i64;
+    let y = ((length - height) / 2) as i64;
 
-    overlay(
-        &mut bottom,
-        &rotated,
-        // inverted for rotated image
-        (length - height) / 2,
-        (length - width) / 2,
-    );
+    overlay(&mut bottom, &img, x, y);
+
+    // Corner point inverted for rotated image.
+    overlay(&mut bottom, &rotated, y, x);
     bottom
 }
 
