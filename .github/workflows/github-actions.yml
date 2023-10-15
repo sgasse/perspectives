@@ -12,6 +12,18 @@ env:
   CARGO_TERM_COLORS: always
 
 jobs:
+  lint:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly
+          components: clippy
+          targets: wasm32-unknown-unknown
+      - run: cargo +nightly clippy --no-deps -- -D warnings
+
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:

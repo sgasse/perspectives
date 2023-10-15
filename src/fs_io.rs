@@ -13,10 +13,8 @@ pub fn write_image(img: Image<Rgba<u8>>, filename: &str) -> Result<(), String> {
     match img.save(filename) {
         Ok(_) => {
             println!("Wrote file {}", filename);
-            return Ok(());
+            Ok(())
         }
-        Err(_) => {
-            return Err(format!("Could not save to {}", filename));
-        }
+        Err(_) => Err(format!("Could not save to {}", filename)),
     }
 }

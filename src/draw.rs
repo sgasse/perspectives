@@ -1,11 +1,10 @@
-use wasm_bindgen::Clamped;
-
 use image::{
     imageops::{crop, overlay, rotate90},
     Rgba, RgbaImage,
 };
 use imageproc::{definitions::Image, drawing::draw_text};
 use rusttype::{Font, Scale};
+use wasm_bindgen::Clamped;
 use web_sys::ImageData;
 
 pub fn calc_perspective_image(text: &str, canvas_size: f32) -> ImageData {
@@ -97,8 +96,7 @@ fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
 
 fn load_font() -> Font<'static> {
     let font_data: &[u8] = include_bytes!("../resources/DejaVuSansMono.ttf");
-    let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
-    return font;
+    Font::try_from_bytes(font_data).unwrap()
 }
 
 #[cfg(test)]
