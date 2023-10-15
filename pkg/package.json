@@ -1,0 +1,14 @@
+{
+  "name": "perspectives",
+  "collaborators": [
+    "Simon Gasse <sgasse@users.noreply.github.com>"
+  ],
+  "version": "0.2.5",
+  "files": [
+    "perspectives_bg.wasm",
+    "perspectives.js",
+    "perspectives.d.ts"
+  ],
+  "browser": "perspectives.js",
+  "types": "perspectives.d.ts"
+}
