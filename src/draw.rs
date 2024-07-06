@@ -9,8 +9,16 @@ use imageproc::{definitions::Image, drawing::draw_text};
 use wasm_bindgen::Clamped;
 use web_sys::ImageData;
 
-pub fn calc_perspective_image(text: &str, canvas_size: f32) -> ImageData {
-    let img = get_scaled_cropped_text(text, canvas_size / 26.0, canvas_size, canvas_size as u32);
+pub fn calc_perspective_image(text: &str, canvas_size: f64) -> ImageData {
+    let img = get_scaled_cropped_text(
+        text,
+        // Scale font down horizontally to make space for some letters.
+        canvas_size as f32 / 26.0,
+        // Fill complete vertical size.
+        canvas_size as f32,
+        // Pass width/height of canvas for bottom layer.
+        canvas_size as u32,
+    );
     let img = overlay_with_rotated(img, canvas_size as u32);
 
     let (width, _height) = img.dimensions();

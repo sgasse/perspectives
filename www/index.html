@@ -1,33 +1,32 @@
+<!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
-    <link rel="stylesheet" href="style.css">
-</head>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
+  <body>
     <div id="wrapper">
-        <h1>A question of the perspective...</h1>
+      <h1>A question of the perspective...</h1>
 
-        <input type="text" id="inputText">
+      <input type="text" id="userInput" />
 
-        <div id="canvasWrapper">
-            <canvas id="textImage"></canvas>
-        </div>
+      <div id="canvasWrapper">
+        <canvas id="warpedText"></canvas>
+      </div>
     </div>
 
-    <script src='./pkg/perspectives.js'></script>
+    <script src="./pkg/perspectives.js"></script>
     <script>
-        const { wasm_main } = wasm_bindgen;
+      const { wasm_main } = wasm_bindgen;
 
-        async function run() {
-            await wasm_bindgen('./pkg/perspectives_bg.wasm');
+      async function run() {
+        await wasm_bindgen("./pkg/perspectives_bg.wasm");
 
-            wasm_main();
-        }
+        wasm_main();
+      }
 
-        run();
+      run();
     </script>
-</body>
-
+  </body>
 </html>
