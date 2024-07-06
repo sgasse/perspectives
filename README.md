@@ -7,6 +7,8 @@ All interaction with the DOM is done with [wasm-bindgen][wasm-bindgen] and speci
 The generation of the warped image is triggered automatically when the input box changes. We delay
 the calculation a little with a _debounce pattern_ to avoid overloading the end device.
 
+[Live-Demo](http://sgasse.github.io/perspectives)
+
 ![Example of warped text](./example.png)
 
 [rust]: https://www.rust-lang.org/
