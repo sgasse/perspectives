@@ -1,6 +1,6 @@
 [package]
 name = "perspectives"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Simon B. Gasse <sgasse@users.noreply.github.com>"]
 edition = "2021"
 
@@ -11,29 +11,26 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-image = "^0.24.7"
-imageproc = "^0.23.0"
-rusttype = "^0.9.3"
-wasm-bindgen = "^0.2.87"
+ab_glyph = "0.2.28"
 console_error_panic_hook = { version = "^0.1.7", optional = true }
-js-sys = "^0.3.64"
-
-[dependencies.web-sys]
-version = "^0.3.64"
-features = [
+image = "^0.25.1"
+imageproc = "^0.25.0"
+js-sys = "^0.3.69"
+wasm-bindgen = "^0.2.92"
+web-sys = { version = "^0.3.69", features = [
   'CanvasRenderingContext2d',
   'console',
   'Document',
   'Element',
   'HtmlCanvasElement',
-  'HtmlInputElement',
   'HtmlElement',
+  'HtmlInputElement',
   'ImageData',
   'MessageEvent',
   'MouseEvent',
   'Node',
   'Window',
-]
+] }
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.

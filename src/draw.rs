@@ -1,9 +1,11 @@
+use std::sync::OnceLock;
+
+use ab_glyph::{FontRef, PxScale};
 use image::{
     imageops::{crop, overlay, rotate90},
     Rgba, RgbaImage,
 };
 use imageproc::{definitions::Image, drawing::draw_text};
-use rusttype::{Font, Scale};
 use wasm_bindgen::Clamped;
 use web_sys::ImageData;
 
@@ -30,7 +32,7 @@ pub fn get_scaled_cropped_text(
         Rgba([0, 0, 0, 255]),
         0,
         0,
-        Scale {
+        PxScale {
             x: x_scale,
             y: y_scale,
         },
@@ -87,9 +89,12 @@ fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
     (xmin, xmax, ymin, ymax)
 }
 
-fn load_font() -> Font<'static> {
-    let font_data: &[u8] = include_bytes!("../resources/DejaVuSansMono.ttf");
-    Font::try_from_bytes(font_data).unwrap()
+fn load_font() -> &'static FontRef<'static> {
+    static FONT: OnceLock<FontRef> = OnceLock::new();
+    FONT.get_or_init(|| {
+        let font_data: &[u8] = include_bytes!("../resources/DejaVuSansMono.ttf");
+        FontRef::try_from_slice(font_data).unwrap()
+    })
 }
 
 #[cfg(test)]
