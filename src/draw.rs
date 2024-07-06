@@ -5,35 +5,38 @@ use image::{
     imageops::{crop, overlay, rotate90},
     Rgba, RgbaImage,
 };
-use imageproc::{definitions::Image, drawing::draw_text};
+use imageproc::{
+    definitions::Image,
+    drawing::draw_text_mut,
+    geometric_transformations::{warp, Interpolation, Projection},
+};
 use wasm_bindgen::Clamped;
 use web_sys::ImageData;
 
 pub fn calc_perspective_image(text: &str, canvas_size: f64) -> ImageData {
-    let img = get_scaled_cropped_text(
+    let img = get_text(
         text,
-        // Scale font down horizontally to make space for some letters.
+        // Scale font down horizontally to make space for some letters (with magic number).
         canvas_size as f32 / 26.0,
         // Fill complete vertical size.
         canvas_size as f32,
         // Pass width/height of canvas for bottom layer.
         canvas_size as u32,
     );
+    let img = apply_perspective_shear(&img, 0.1);
     let img = overlay_with_rotated(img, canvas_size as u32);
 
     let (width, _height) = img.dimensions();
     ImageData::new_with_u8_clamped_array(Clamped(&img.into_raw()), width).unwrap()
 }
 
-fn get_scaled_cropped_text(
-    text: &str,
-    x_scale: f32,
-    y_scale: f32,
-    background_size: u32,
-) -> Image<Rgba<u8>> {
-    let img = RgbaImage::from_pixel(background_size, background_size, Rgba([0, 0, 0, 0]));
-    let mut img = draw_text(
-        &img,
+fn get_text(text: &str, x_scale: f32, y_scale: f32, background_size: u32) -> Image<Rgba<u8>> {
+    // Initialize empty background.
+    let mut img = RgbaImage::from_pixel(background_size, background_size, Rgba([0, 0, 0, 0]));
+
+    // Draw text on background copy.
+    draw_text_mut(
+        &mut img,
         Rgba([0, 0, 0, 255]),
         0,
         0,
@@ -44,10 +47,46 @@ fn get_scaled_cropped_text(
         &load_font(),
         text,
     );
+
+    // Find bounding box of drawn text and crop it.
     let bbox = find_bbox(&img);
     let width = bbox.1 - bbox.0;
     let height = bbox.3 - bbox.2;
     crop(&mut img, bbox.0, bbox.2, width, height).to_image()
+}
+
+fn apply_perspective_shear(img: &Image<Rgba<u8>>, top_shrink_factor: f32) -> Image<Rgba<u8>> {
+    let (w, h) = img.dimensions();
+    let w = w as f32;
+    let h = h as f32;
+
+    // Coordinate system
+    // 0,0 -- x,0
+    //  |      |
+    // 0,y -- x,y
+    let projection = Projection::from_control_points(
+        // From
+        // |    |
+        // |    |
+        // To
+        //  /  \
+        // /    \
+        [(0., 0.), (w, 0.), (0., h), (w, h)],
+        [
+            (top_shrink_factor * w, 0.),
+            ((1. - top_shrink_factor) * w, 0.),
+            (0., h),
+            (w, h),
+        ],
+    )
+    .unwrap();
+
+    warp(
+        img,
+        &projection,
+        Interpolation::Bilinear,
+        Rgba([0, 0, 0, 0]),
+    )
 }
 
 fn overlay_with_rotated(img: Image<Rgba<u8>>, length: u32) -> Image<Rgba<u8>> {
@@ -110,7 +149,7 @@ fn load_font() -> &'static FontRef<'static> {
 
 #[cfg(test)]
 mod tests {
-    use super::get_scaled_cropped_text;
+    use super::get_text;
 
     #[test]
     fn check_letters_in_bound() {
@@ -119,7 +158,7 @@ mod tests {
         for byte_num in 33..=126 {
             let byte_arr = [byte_num];
             let test_letter = std::str::from_utf8(&byte_arr).unwrap();
-            let img = get_scaled_cropped_text(&format!("{}", test_letter), 15.0, 400.0, 400);
+            let img = get_text(&format!("{}", test_letter), 15.0, 400.0, 400);
             let (_width, height) = img.dimensions();
 
             if height > max_height {

@@ -9,6 +9,9 @@ the calculation a little with a _debounce pattern_ to avoid overloading the end 
 
 [Live-Demo](http://sgasse.github.io/perspectives)
 
+You can also add the text you want to have warped as search params:
+[Example with search params](http://sgasse.github.io/perspectives?OMG!)
+
 ![Example of warped text](./example.png)
 
 [rust]: https://www.rust-lang.org/

@@ -87,8 +87,11 @@ pub(crate) fn maybe_set_initial_image(canvas_size: f64) {
     };
 
     if !search_params.is_empty() {
-        debug!("Setting initial image from search params text: {search_params}");
-        let img_data = calc_perspective_image(&search_params, canvas_size);
+        // Handle URL space encoding.
+        let text = search_params.replace("%20", " ");
+
+        debug!("Setting initial image from search params text: {text}");
+        let img_data = calc_perspective_image(&text, canvas_size);
         set_img_data(CANVAS_NAME, img_data);
     }
 }
