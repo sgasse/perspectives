@@ -1,6 +1,6 @@
 [package]
 name = "perspectives"
-version = "0.2.7"
+version = "0.2.8"
 authors = ["Simon B. Gasse <sgasse@users.noreply.github.com>"]
 edition = "2021"
 
@@ -28,6 +28,7 @@ web-sys = { version = "^0.3.69", features = [
   'HtmlElement',
   'HtmlInputElement',
   'ImageData',
+  'Location',
   'MessageEvent',
   'MouseEvent',
   'Node',

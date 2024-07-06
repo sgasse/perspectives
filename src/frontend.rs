@@ -1,12 +1,8 @@
-use crate::CANVAS_NAME;
-use crate::INPUT_FIELD_NAME;
-
-use super::draw::calc_perspective_image;
-
 use log::debug;
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::HtmlInputElement;
-use web_sys::ImageData;
+use web_sys::{window, CanvasRenderingContext2d, HtmlCanvasElement, HtmlInputElement, ImageData};
+
+use crate::{draw::calc_perspective_image, CANVAS_NAME, INPUT_FIELD_NAME};
 
 /// Bind closure to react to changing input to the onChange event
 ///
@@ -85,6 +81,18 @@ pub(crate) fn set_canvas_size(canvas_name: &str, width: u32, height: u32) {
     canvas.set_height(height);
 }
 
+pub(crate) fn maybe_set_initial_image(canvas_size: f64) {
+    let Some(search_params) = search_params() else {
+        return;
+    };
+
+    if !search_params.is_empty() {
+        debug!("Setting initial image from search params text: {search_params}");
+        let img_data = calc_perspective_image(&search_params, canvas_size);
+        set_img_data(CANVAS_NAME, img_data);
+    }
+}
+
 fn get_image_update_closure(canvas_size: f64) -> Box<dyn FnMut()> {
     Box::new(move || {
         let document = web_sys::window().unwrap().document().unwrap();
@@ -98,7 +106,7 @@ fn get_image_update_closure(canvas_size: f64) -> Box<dyn FnMut()> {
 
         let text = input_field.value();
         if !text.trim().is_empty() {
-            let img_data = calc_perspective_image(&text, get_min_window_dim());
+            let img_data = calc_perspective_image(&text, canvas_size);
             set_img_data(CANVAS_NAME, img_data);
             debug!("Updated rendered text to \"{text}\"");
         } else {
@@ -120,19 +128,23 @@ fn clear_canvas(canvas_name: &str, size: f64) {
     ctx.clear_rect(0.0, 0.0, size, size);
 }
 
-fn get_canvas(canvas_name: &str) -> Option<web_sys::HtmlCanvasElement> {
-    web_sys::window()
+fn get_canvas(canvas_name: &str) -> Option<HtmlCanvasElement> {
+    window()
         .and_then(|w| w.document())
         .and_then(|d| d.get_element_by_id(canvas_name))
-        .and_then(|c| c.dyn_into::<web_sys::HtmlCanvasElement>().ok())
+        .and_then(|c| c.dyn_into::<HtmlCanvasElement>().ok())
 }
 
-fn get_2d_context(
-    canvas: &web_sys::HtmlCanvasElement,
-) -> Option<web_sys::CanvasRenderingContext2d> {
+fn get_2d_context(canvas: &HtmlCanvasElement) -> Option<CanvasRenderingContext2d> {
     canvas
         .get_context("2d")
         .ok()
         .flatten()
-        .and_then(|x| x.dyn_into::<web_sys::CanvasRenderingContext2d>().ok())
+        .and_then(|x| x.dyn_into::<CanvasRenderingContext2d>().ok())
+}
+
+fn search_params() -> Option<String> {
+    window()
+        .and_then(|w| w.location().search().ok())
+        .map(|s| s.trim_start_matches('?').to_owned())
 }
