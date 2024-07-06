@@ -1,6 +1,5 @@
-pub mod draw;
-pub mod frontend;
-pub mod fs_io;
+mod draw;
+mod frontend;
 mod utils;
 
 use utils::set_panic_hook;

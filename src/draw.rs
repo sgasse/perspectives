@@ -13,14 +13,11 @@ pub fn calc_perspective_image(text: &str, canvas_size: f32) -> ImageData {
     let img = get_scaled_cropped_text(text, canvas_size / 26.0, canvas_size, canvas_size as u32);
     let img = overlay_with_rotated(img, canvas_size as u32);
 
-    let (sw, _sh) = img.dimensions();
-
-    let img_arr: &[u8] = &img.into_raw();
-
-    ImageData::new_with_u8_clamped_array(Clamped(img_arr), sw).unwrap()
+    let (width, _height) = img.dimensions();
+    ImageData::new_with_u8_clamped_array(Clamped(&img.into_raw()), width).unwrap()
 }
 
-pub fn get_scaled_cropped_text(
+fn get_scaled_cropped_text(
     text: &str,
     x_scale: f32,
     y_scale: f32,
@@ -45,32 +42,38 @@ pub fn get_scaled_cropped_text(
     crop(&mut img, bbox.0, bbox.2, width, height).to_image()
 }
 
-pub fn overlay_with_rotated(img: Image<Rgba<u8>>, length: u32) -> Image<Rgba<u8>> {
+fn overlay_with_rotated(img: Image<Rgba<u8>>, length: u32) -> Image<Rgba<u8>> {
     let (width, height) = img.dimensions();
 
     let rotated = rotate90(&img);
 
-    let mut bottom = RgbaImage::from_pixel(length, length, Rgba([255, 255, 255, 255]));
+    let mut bottom_layer = RgbaImage::from_pixel(length, length, Rgba([255, 255, 255, 255]));
 
+    // Calculate corner point for image to overlay on the bottom layer.
     let x = ((length - width) / 2) as i64;
     let y = ((length - height) / 2) as i64;
 
-    overlay(&mut bottom, &img, x, y);
+    overlay(&mut bottom_layer, &img, x, y);
+    // Use inverted corner point (y, x) for rotated image.
+    overlay(&mut bottom_layer, &rotated, y, x);
 
-    // Corner point inverted for rotated image.
-    overlay(&mut bottom, &rotated, y, x);
-    bottom
+    bottom_layer
 }
 
 fn find_bbox(img: &Image<Rgba<u8>>) -> (u32, u32, u32, u32) {
     let (width, height) = img.dimensions();
+
+    // Initialize bounding box limits.
     let mut xmin = width;
     let mut xmax = 0;
     let mut ymin = height;
     let mut ymax = 0;
 
+    // Loop over all pixels.
     for (x, y, pixel) in img.enumerate_pixels() {
+        // Find pixels which are non-empty.
         if *pixel != Rgba([0, 0, 0, 0]) {
+            // Update bounding box limits.
             if x < xmin {
                 xmin = x;
             }
