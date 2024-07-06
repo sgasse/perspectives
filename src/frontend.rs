@@ -93,8 +93,8 @@ fn get_image_update_closure() -> Box<dyn FnMut()> {
             .expect("#inputText should be a HtmlInputElement");
 
         let text = input_field.value();
-        if text != "" && text != " " {
-            let img_data = calc_perspective_image(&*text, get_min_window_dim());
+        if !text.trim().is_empty() {
+            let img_data = calc_perspective_image(&text, get_min_window_dim());
             set_img_data(img_data);
         } else {
             clear_canvas();
@@ -138,13 +138,11 @@ fn get_2d_context(
 ) -> Result<web_sys::CanvasRenderingContext2d, &'static str> {
     match canvas.get_context("2d") {
         Ok(ctx) => match ctx {
-            Some(ctx) => {
-                return ctx
-                    .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                    .map_err(|_| "Could not cast context")
-            }
-            None => return Err("Could not get context"),
+            Some(ctx) => ctx
+                .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                .map_err(|_| "Could not cast context"),
+            None => Err("Could not get context"),
         },
-        Err(_) => return Err("Could not get context"),
+        Err(_) => Err("Could not get context"),
     }
 }
