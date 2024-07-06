@@ -3,7 +3,7 @@
   "collaborators": [
     "Simon B. Gasse <sgasse@users.noreply.github.com>"
   ],
-  "version": "0.2.7",
+  "version": "0.2.9",
   "files": [
     "perspectives_bg.wasm",
     "perspectives.js",
